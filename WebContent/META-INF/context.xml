@@ -1,0 +1,33 @@
+<Context>
+	
+	<Environment name="version" value="0.0.1" type="java.lang.String" />
+
+	<Resource name="jdbc/farmaturni" 
+		url="jdbc:mysql://127.0.0.1:3306/farmaturni2"
+		username="farmaturniwebapp" 
+		password="codaqdev" 
+	    auth="Container" 
+	    type="javax.sql.DataSource"
+		factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"	    	    
+		driverClassName="com.mysql.jdbc.Driver" 
+		initialSize="10" 
+		maxActive="100"
+		minIdle="10" 
+		maxIdle="50" 
+		maxWait="10000" 
+		validationQuery="SELECT 1"
+		validationQueryTimeout="-1" 
+		validationInterval="30000"
+        timeBetweenEvictionRunsMillis="30000"
+        minEvictableIdleTimeMillis="30000" 		
+		testOnBorrow="true" 
+		testOnReturn="false"
+		removeAbandoned="true" 
+		removeAbandonedTimeout="300" 
+		logAbandoned="false" 
+	/>
+	
+	<!-- if the value is empty then will be used the same server of farmaturni api -->
+	<!-- Environment name="cqImageServer" value="http://54.210.219.120:8080" type="java.lang.String" /-->
+
+</Context>

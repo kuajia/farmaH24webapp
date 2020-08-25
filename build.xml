@@ -1,0 +1,129 @@
+<project name="itsapi" basedir="." default="build">
+	
+	<property file="build.properties" />
+
+	<property name="project.folder"   value="${project}${version}.jar" />
+	<property name="jar.name"         value="${project}${version}.jar" />
+	<property name="war.name"         value="${project}${version}.war" />
+	
+	<property name="bin.folder"       value="bin"       />
+	<property name="build.folder"     value="build"     />
+	<property name="built_distribution.folder" value="built_distribution" />
+	<property name="lib.folder"       value="${webapp.jar.folder}" />
+	<!--extlib.folder contains only jars need to compile but that already embedded in Tomcat (e.g. servlet-api.jar)-->
+	<property name="extlib.folder"    value="lib"       />	
+	<property name="src.folder"       value="src"       />
+	<property name="test.folder"      value="test"      />
+	
+	<target name="clean" description="clean up">
+		<delete dir="${bin.folder}"       />
+		<delete dir="${build.folder}"     />
+		<delete dir="${built_distribution.folder}" />
+	</target>
+		
+	<target name="init" depends="clean" description="init the test environment">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build.folder}" />
+		<mkdir dir="${build.folder}/classes" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source">
+		<javac srcdir="${src.folder}" destdir="${build.folder}/classes"
+			debug="true" debuglevel="lines,source" includeantruntime="false"
+			encoding="UTF-8"
+			>
+			<classpath>
+				<fileset dir="${lib.folder}">
+					<include name="*.jar" />
+				</fileset>
+				<fileset dir="${extlib.folder}">
+					<include name="*.jar" />
+				</fileset>				
+			</classpath>
+		</javac>
+		<!--javac srcdir="${test.folder}" destdir="${build.folder}/classes"
+			debug="true" debuglevel="lines,source" includeantruntime="false"
+			encoding="UTF-8"
+			>
+			<classpath>
+				<fileset dir="${lib.folder}">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+		</javac-->
+	</target>
+
+	<target name="build" depends="compile" description="build the war">
+	    <copy file="${warconfig.folder}/${environment}${version}/web.xml" tofile="${webcontent.folder}/WEB-INF/web.xml" overwrite="true"/>
+	    <copy file="${warconfig.folder}/${environment}${version}/context.xml" tofile="${webcontent.folder}/META-INF/context.xml" overwrite="true"/>
+	    <copy file="${warconfig.folder}/${environment}${version}/log4j.properties" tofile="${webcontent.folder}/WEB-INF/classes/log4j.properties" overwrite="true"/>
+		<antcall target="_build_generic"/>
+	</target>
+	
+	<target name="built_distribution" depends="build" description="Genera il JAR/WAR file">
+		<!-- antcall target="built_distribution_batch"/ -->
+		<delete dir="${built_distribution.folder}" />
+		<!-- contains all library dependencies -->
+		<copy todir="${built_distribution.folder}" file="${build.folder}/${jar.name}" />
+		<copy todir="${built_distribution.folder}" file="${build.folder}/${war.name}" />
+		<copy todir="${external.jar.folder}"       file="${build.folder}/${jar.name}" />		
+
+	</target>
+	
+	<target name="clean_source_repository" depends="clean" description="clean up before push into source repository (removes bin, build and dist folders and all .ser files)">
+		<!-- Delete all *.ser files -->
+		<delete>
+			<fileset dir=".">
+				<include name="**/*.ser" />
+			</fileset>			
+		</delete>
+	</target>
+
+	<target name="_build_generic" description="build a generic war">
+		<!-- create a property containing all .jar files, prefix lib/, and seperated  
+			with a space -->
+		<pathconvert property="libs.project" pathsep=" ">
+			<mapper>
+				<chainedmapper>
+					<!-- remove absolute path -->
+					<flattenmapper />
+					<!-- add lib/ prefix -->
+					<globmapper from="*" to="lib/*" />
+				</chainedmapper>
+			</mapper>
+			<path>
+				<!-- lib.folder contains all jar files, in several subdirectories -->
+				<fileset dir="${lib.folder}">
+					<include name="**/*.jar" />
+				</fileset>
+			</path>
+		</pathconvert>
+		<!-- create the jar -->
+		<jar jarfile="${build.folder}/${jar.name}" basedir="${build.folder}/classes">
+			<!-- define MANIFEST.MF -->
+		</jar>				
+		<!-- create the war -->
+	    <war destfile="${build.folder}/${war.name}" webxml="${webcontent.folder}/WEB-INF/web.xml">
+	      <metainf  dir="${webcontent.folder}/META-INF"  includes="**/*.xml" />	    	
+	      <lib dir="${webapp.jar.folder}"/>		    	
+	      <classes dir="${build.folder}/classes"/>
+	      <fileset dir="${webcontent.folder}">
+	          <include name="**/*.ini"/>
+	          <include name="**/*.jsp"/>
+	          <include name="**/*.properties"/>
+	          <include name="**/*.xml"/>
+	      </fileset>	    	
+	    </war>		
+	</target>
+
+
+	<!-- target name="built_distribution_batch" description="generate a production generic distribution">
+		<delete dir="${built_distribution.folder}" />
+		<copy todir="${built_distribution.folder}" file="${build.folder}/${jar.name}" />
+		<copy todir="${built_distribution.folder}" file="${build.folder}/${war.name}" />
+		<copy todir="${external.jar.folder}"   file="${build.folder}/${jar.name}" />		
+	</target -->
+	
+</project>
